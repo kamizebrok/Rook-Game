@@ -1,7 +1,7 @@
 from pathlib import Path
 import pygame
 import sys
-import os
+import time
 import pickle
 
 pygame.init()
@@ -12,11 +12,6 @@ WINDOW_TITLE = "Rook-Game"
 pygame.display.set_caption(WINDOW_TITLE)
 icon = pygame.image.load('grafiki/icon.png')
 pygame.display.set_icon(icon)
-
-chess_pieces = 'font/CHEQ_TT.TTF'
-#chess_pieces = 'font/CASEFONT.TTF'
-truecat = pygame.font.Font('font/Truecat.ttf', 110)
-
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -29,6 +24,7 @@ def draw_text(text, font, color, surface, x, y):
     text_rect = text_obj.get_rect()
     text_rect.center = (x, y)
     surface.blit(text_obj, text_rect)
+
 def save_lists_to_file(list1, list2, filename):
     with open(filename, 'wb') as file:
         pickle.dump((list1, list2), file)
@@ -39,111 +35,56 @@ def load_lists_from_file(filename):
 def clear_file(filename):
     with open(filename, 'w') as file:
         pass
-class Button():
-    def __init__(self, text, width, height, pos, elevation, color, hover):
-        self.elevation = elevation
-        self.original_y_pos = pos[1]
-        self.color = color
-        self.hover = hover
-        self.clicked = False
-        self.top_rect = pygame.Rect(pos,(width,height))
-        self.top_color = color
-        self.bottom_rect = pygame.Rect(pos,(width,height))
-        font = pygame.font.Font('font/CampanaScript_PERSONAL_USE_ONLY.otf', 110)
-        self.text_surf = font.render(text,True,(255,255,255))
-        self.text_rect = self.text_surf.get_rect(center = self.top_rect.center)
-        self.name = text
-    def check_action(self):
-        if self.name == "New Game":
-            game = Game(False)
-            game.run()
-        elif self.name == "Continuation":
-            game = Game(True)
-            game.run()
-        elif self.name == "Rules":
-            SCREEN_WIDTH = 800
-            SCREEN_HEIGHT = 800
-            screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-            pygame.display.set_caption("Rook-Game-Rules")
-            screen.fill('wheat3')
 
-            while True:
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        pygame.quit()
-                        sys.exit()
-                    if event.type == pygame.KEYDOWN:
-                        if event.key == pygame.K_ESCAPE:
-                            main()
+class Figure():
+    def __init__(self, font):
+        self.graphics = [('Nowoczesne', 'font/CHEQ_TT.TTF'),
+                         ('Przypadki', 'font/CASEFONT.TTF'),
+                         ('Maya', 'font/MAYAFONT.TTF'),
+                         ('Alfa', 'font/Alpha.TTF'),
+                         ('Condal','font/CONDFONT.TTF'),
+                         ('Leipzig','font/LEIPFONT.TTF')]
+        self.tmp = ''
+        for i in self.graphics:
+            if i[0] == font:
+                self.tmp = i[1]
+                f = open("settings.txt", "w")
+                f.write(i[1])
+                f.close()
+        self.font = pygame.font.Font(self.tmp, 100)
+        self.bierki = ['t', 'r']
+        self.text_surface = ""
+        self.text_surface = ""
 
-                background_image = pygame.image.load("grafiki/Zasady.png").convert()
-                screen_rect = screen.get_rect()
-                image_rect = background_image.get_rect()
-                image_x = screen_rect.centerx - image_rect.width // 2
-                image_y = screen_rect.centery - image_rect.height // 2
-                screen.fill((255, 244, 229))
-                screen.blit(background_image,(image_x, image_y-125))
-                pygame.display.update()
-
-
-        elif self.name == "Settings":
-            print("Ustawienia")
-            # tutaj przyciski z ustawieniami
-        elif self.name == "Quit":
-            pygame.quit()
-            sys.exit()
-    def draw_button(self, screen):
-        action = False
-        pos = pygame.mouse.get_pos()
-        top_rect = self.top_rect.copy()
-        bottom_rect = self.bottom_rect.copy()
-        bottom_rect.x += 20
-        bottom_rect.y += 20
-        if top_rect.collidepoint(pos):
-            self.top_color = self.hover
-            if pygame.mouse.get_pressed()[0]:
-                self.clicked = True
-                bottom_rect.inflate_ip(self.elevation, self.elevation)
-                top_rect.inflate_ip(self.elevation, self.elevation)
-
-            elif pygame.mouse.get_pressed()[0] == 0 and self.clicked == True:
-                self.clicked = False
-                action = True
-                self.check_action()
-            self.top_color = self.hover
-        else:
-            self.top_color = self.color
-
-        bottom_surf = pygame.Surface(bottom_rect.size, pygame.SRCALPHA)
-        pygame.draw.rect(bottom_surf, 0, (0, 0, *bottom_rect.size), border_radius = 12)
-        screen.blit(bottom_surf, bottom_rect.topleft)
-
-        top_surf = pygame.Surface(top_rect.size, pygame.SRCALPHA)
-        pygame.draw.rect(top_surf, self.top_color, (0, 0, *top_rect.size), border_radius = 12)
-        screen.blit(top_surf, top_rect.topleft)
-
-        screen.blit(self.text_surf, self.text_rect)
-        return action
+    @staticmethod
+    def render_text(text, font, color):
+        text_surface = font.render(text, True, color)
+        return text_surface, text_surface.get_rect()
+    def rysuj_bierke(self):
+        index = self.bierki.index(self.bierki[0])
+        text_surface, text_rect = self.render_text(self.bierki[1], self.font, 'white')
+        text_rect.center = (570, 225)
+        return text_surface, text_rect
 
 def main():
-    button_width = 330
-    button_length = 125
+    button_width = 250
+    button_length = 100
     position_x = (WIDTH-button_width)/2
-    position_y = 25
+    position_y = 75
     path = Path('./save.txt')
     if path.is_file() and bool(path.stat().st_size):
         load_button = Button("Continuation", button_width, button_length, (position_x, position_y), 20,(128, 128, 255, 128), (255, 128, 255, 128))
-        position_y += 150
+        position_y += 125
     new_game_button = Button("New Game", button_width, button_length, (position_x, position_y), 20, (128, 128, 255, 128), (255, 128, 255, 128))
-    rules_button = Button("Rules", button_width, button_length, (position_x, position_y+150), 20, (128, 128, 255, 128), (255, 128, 255, 128))
-    settings_button = Button("Settings", button_width, button_length, (position_x, position_y+300), 20, (128, 128, 255, 128), (255, 128, 255, 128))
-    quit_button = Button("Quit", button_width, button_length, (position_x, position_y+450), 20, (128, 128, 255, 128), (255, 128, 255, 128))
+    rules_button = Button("Rules", button_width, button_length, (position_x, position_y+125), 20, (128, 128, 255, 128), (255, 128, 255, 128))
+    settings_button = Button("Settings", button_width, button_length, (position_x, position_y+250), 20, (128, 128, 255, 128), (255, 128, 255, 128))
+    quit_button = Button("Quit", button_width, button_length, (position_x, position_y+375), 20, (128, 128, 255, 128), (255, 128, 255, 128))
     run = True
     while run:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
-        background_image = pygame.image.load("grafiki/tlo.png").convert()
+        background_image = pygame.image.load("grafiki/tlo1.png").convert()
         WIN.fill((255, 255, 255))
         WIN.blit(background_image, (0, 0))
         if path.is_file() and bool(path.stat().st_size):
@@ -155,9 +96,10 @@ def main():
         pygame.display.update()
     pygame.quit()
     sys.exit()
+
 class Game:
-    def __init__(self, iscontinued):
-        self.font = pygame.font.Font(chess_pieces, 100)
+    def __init__(self, font, iscontinued):
+        self.font = pygame.font.Font(font, 100)
         self.counter_draw_moves = 0
         self.SZER = 800
         self.WYS = 800
@@ -171,6 +113,7 @@ class Game:
         pygame.display.set_caption(self.WINDOW_TITLE)
         self.icon = pygame.image.load('grafiki/icon.png')
         pygame.display.set_icon(self.icon)
+
         self.etap = 0
         self.wsje_ruchy = []
 
@@ -180,8 +123,10 @@ class Game:
             print(self.pola_bialych)
             print(self.pola_czarnych)
         else:
-            self.pola_bialych = [(0, 7), (1, 7), (2, 7), (3, 7), (4, 7), (5, 7), (6, 7), (7, 7), (0, 6), (1, 6), (2, 6), (3, 6), (4, 6), (5, 6), (6, 6), (7, 6)]
-            self.pola_czarnych = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1)]
+            self.pola_bialych = [(0, 7), (1, 7), (2, 7), (3, 7), (4, 7), (5, 7), (6, 7), (7, 7), (0, 6), (1, 6), (2, 6),
+                                 (3, 6), (4, 6), (5, 6), (6, 6), (7, 6)]
+            self.pola_czarnych = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (0, 1), (1, 1),
+                                  (2, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1)]
 
         self.bierki = ['t', 'r']
         self.zbite_biale = []
@@ -201,21 +146,22 @@ class Game:
         self.game_over = False
 
         self.strona = 'bialy'
-        #if self.strona == 'bialy':
-        #    self.na_oborot()
 
         self.biale_opcje = self.opcje_ruchu(self.biale_bierki, self.pola_bialych, 'bialy')
         self.czarne_opcje = self.opcje_ruchu(self.czarne_bierki, self.pola_czarnych, 'czarny')
+
     @staticmethod
     def render_text(text, font, color):
         text_surface = font.render(text, True, color)
         return text_surface, text_surface.get_rect()
+
     def na_oborot(self):
         yeet = []
         for j in range(len(self.pola_czarnych)):
             yeet.append(self.pola_czarnych[j])
             self.pola_czarnych[j] = self.pola_bialych[j]
             self.pola_bialych[j] = yeet[j]
+
     def rysuj_szachownice(self):
         for i in range(32):
             kolumna = i % 4
@@ -439,6 +385,140 @@ class Game:
 
         pygame.quit()
         sys.exit()
+
+
+
+class Button():
+    def __init__(self, text, width, height, pos, elevation, color, hover):
+        self.elevation = elevation
+        self.original_y_pos = pos[1]
+        self.color = color
+        self.hover = hover
+        self.clicked = False
+        self.top_rect = pygame.Rect(pos,(width,height))
+        self.top_color = color
+        self.bottom_rect = pygame.Rect(pos,(width,height))
+        font = pygame.font.Font('font/CampanaScript_PERSONAL_USE_ONLY.otf', 90)
+        self.text_surf = font.render(text,True,(255,255,255))
+        self.text_rect = self.text_surf.get_rect(center = self.top_rect.center)
+        self.name = text
+        # test
+        self.name_chess_pieces = "Nowoczesne"
+        self.name_color_board = "Drewno"
+        self.tmp_name_chess_pieces = ""
+    def window_settings(self):
+        screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        pygame.display.set_caption("Rook-Game-Settings")
+        figure = Figure(self.name_chess_pieces)
+        figure.rysuj_bierke()
+        button_width = 250
+        button_length = 100
+        position_x = (WIDTH - button_width) / 2
+        position_y = 175
+        chess_pieces_button = Button(self.name_chess_pieces, button_width, button_length, (position_x, position_y), 20,
+                             (128, 128, 255, 128), (255, 128, 255, 128))
+        back_button = Button("Back", button_width, button_length, (position_x, position_y + 125), 20,
+                             (128, 128, 255, 128), (255, 128, 255, 128))
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        pygame.display.set_caption("Rook-Game")
+                        main()
+            background_image = pygame.image.load("grafiki/tlo1.png").convert()
+            screen.fill((255, 255, 255))
+            screen.blit(background_image, (0, 0))
+            screen.blit(figure.rysuj_bierke()[0], figure.rysuj_bierke()[1])
+            back_button.draw_button(screen)
+            chess_pieces_button.draw_button(screen)
+            pygame.display.update()
+
+    def check_action(self):
+        if self.name == "New Game":
+            f = open("settings.txt", "r")
+            chess_pieces = f.read()
+            f.close()
+            game = Game(chess_pieces, False)
+            game.run()
+        elif self.name == "Continuation":
+            f = open("settings.txt", "r")
+            chess_pieces = f.read()
+            f.close()
+            game = Game(chess_pieces, True)
+            game.run()
+        elif self.name == "Rules":
+            screen = pygame.display.set_mode((WIDTH, HEIGHT))
+            pygame.display.set_caption("Rook-Game-Rules")
+            screen.fill('wheat3')
+
+            while True:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        sys.exit()
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_ESCAPE:
+                            pygame.display.set_caption("Rook-Game")
+                            main()
+
+                background_image = pygame.image.load("grafiki/Zasady.png").convert()
+                screen_rect = screen.get_rect()
+                image_rect = background_image.get_rect()
+                image_x = screen_rect.centerx - image_rect.width // 2
+                image_y = screen_rect.centery - image_rect.height // 2
+                screen.fill((255, 244, 229))
+                screen.blit(background_image,(image_x, image_y-125))
+                pygame.display.update()
+        elif self.name == "Settings":
+            self.window_settings()
+        elif self.name in ["Nowoczesne", "Przypadki", "Maya", "Alfa", "Condal", "Leipzig"]:
+            names = ["Przypadki", "Maya", "Alfa", "Condal", "Leipzig", "Nowoczesne"]
+            index = (names.index(self.name) + 1) % len(names)
+            self.name_chess_pieces = names[index]
+            self.window_settings()
+        elif self.name == "Plansza":
+            print("plansza")
+        elif self.name == "Back":
+            main()
+        elif self.name == "Quit":
+            pygame.quit()
+            sys.exit()
+
+    def draw_button(self, screen):
+        action = False
+        pos = pygame.mouse.get_pos()
+        top_rect = self.top_rect.copy()
+        bottom_rect = self.bottom_rect.copy()
+        bottom_rect.x += 20
+        bottom_rect.y += 20
+        if top_rect.collidepoint(pos):
+            self.top_color = self.hover
+            if pygame.mouse.get_pressed()[0]:
+                self.clicked = True
+                bottom_rect.inflate_ip(self.elevation, self.elevation)
+                top_rect.inflate_ip(self.elevation, self.elevation)
+
+            elif pygame.mouse.get_pressed()[0] == 0 and self.clicked == True:
+                self.clicked = False
+                action = True
+                self.check_action()
+            self.top_color = self.hover
+        else:
+            self.top_color = self.color
+
+        bottom_surf = pygame.Surface(bottom_rect.size, pygame.SRCALPHA)
+        pygame.draw.rect(bottom_surf, 0, (0, 0, *bottom_rect.size), border_radius = 12)
+        screen.blit(bottom_surf, bottom_rect.topleft)
+
+        top_surf = pygame.Surface(top_rect.size, pygame.SRCALPHA)
+        pygame.draw.rect(top_surf, self.top_color, (0, 0, *top_rect.size), border_radius = 12)
+        screen.blit(top_surf, top_rect.topleft)
+
+        screen.blit(self.text_surf, self.text_rect)
+        return action
 
 if __name__ == "__main__":
     main()
