@@ -1,7 +1,8 @@
 from pathlib import Path
 import pygame
 import sys
-import time
+import os
+import pickle
 
 pygame.init()
 
@@ -21,11 +22,23 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GRAY = (128, 128, 128)
 
+save_path = 'save.txt'
+
 def draw_text(text, font, color, surface, x, y):
     text_obj = font.render(text, True, color)
     text_rect = text_obj.get_rect()
     text_rect.center = (x, y)
     surface.blit(text_obj, text_rect)
+def save_lists_to_file(list1, list2, filename):
+    with open(filename, 'wb') as file:
+        pickle.dump((list1, list2), file)
+def load_lists_from_file(filename):
+    with open(filename, 'rb') as file:
+        list1, list2 = pickle.load(file)
+    return list1, list2
+def clear_file(filename):
+    with open(filename, 'w') as file:
+        pass
 class Button():
     def __init__(self, text, width, height, pos, elevation, color, hover):
         self.elevation = elevation
@@ -42,11 +55,11 @@ class Button():
         self.name = text
     def check_action(self):
         if self.name == "New Game":
-            game = Game()
+            game = Game(False)
             game.run()
         elif self.name == "Continuation":
-            print("Wczytanie zapisanych")
-            # tu bedzie zrobic zapisy wszystkie
+            game = Game(True)
+            game.run()
         elif self.name == "Rules":
             SCREEN_WIDTH = 800
             SCREEN_HEIGHT = 800
@@ -143,7 +156,7 @@ def main():
     pygame.quit()
     sys.exit()
 class Game:
-    def __init__(self):
+    def __init__(self, iscontinued):
         self.font = pygame.font.Font(chess_pieces, 100)
         self.counter_draw_moves = 0
         self.SZER = 800
@@ -161,8 +174,14 @@ class Game:
         self.etap = 0
         self.wsje_ruchy = []
 
-        self.pola_bialych = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1)]
-        self.pola_czarnych = [(0, 7), (1, 7), (2, 7), (3, 7), (4, 7), (5, 7), (6, 7), (7, 7),(0, 6), (1, 6), (2, 6), (3, 6), (4, 6), (5, 6), (6, 6), (7, 6)]
+        if iscontinued:
+            self.pola_bialych, self.pola_czarnych = load_lists_from_file(save_path)
+            print("wczytuje")
+            print(self.pola_bialych)
+            print(self.pola_czarnych)
+        else:
+            self.pola_bialych = [(0, 7), (1, 7), (2, 7), (3, 7), (4, 7), (5, 7), (6, 7), (7, 7), (0, 6), (1, 6), (2, 6), (3, 6), (4, 6), (5, 6), (6, 6), (7, 6)]
+            self.pola_czarnych = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1)]
 
         self.bierki = ['t', 'r']
         self.zbite_biale = []
@@ -171,8 +190,9 @@ class Game:
         self.biale_bierki = []
         self.czarne_bierki = []
 
-        for i in range(16):
+        for i in range(len(self.pola_bialych)):
             self.biale_bierki.append('r')
+        for i in range(len(self.pola_czarnych)):
             self.czarne_bierki.append('t')
 
         self.tmp = 100
@@ -181,8 +201,8 @@ class Game:
         self.game_over = False
 
         self.strona = 'bialy'
-        if self.strona == 'bialy':
-            self.na_oborot()
+        #if self.strona == 'bialy':
+        #    self.na_oborot()
 
         self.biale_opcje = self.opcje_ruchu(self.biale_bierki, self.pola_bialych, 'bialy')
         self.czarne_opcje = self.opcje_ruchu(self.czarne_bierki, self.pola_czarnych, 'czarny')
@@ -293,6 +313,7 @@ class Game:
         run = True
         while run:
             if self.winner == 'bialy':
+                clear_file(save_path)
                 img = pygame.image.load("grafiki/bialy_win.png").convert()
                 screen_rect = self.screen.get_rect()
                 img_rect = img.get_rect()
@@ -313,6 +334,7 @@ class Game:
                     i = i + 1
                 main()
             elif self.winner == 'czarny':
+                clear_file(save_path)
                 img = pygame.image.load("grafiki/czarny_win.png").convert()
                 screen_rect = self.screen.get_rect()
                 img_rect = img.get_rect()
@@ -368,6 +390,7 @@ class Game:
                                     self.zbite_biale.append(self.czarne_bierki[black_piece])
                                     self.czarne_bierki.pop(black_piece)
                                     self.pola_czarnych.pop(black_piece)
+                                    self.counter_draw_moves = 0
                                 self.czarne_opcje = self.opcje_ruchu(self.czarne_bierki, self.pola_czarnych, 'czarny')
                                 self.biale_opcje = self.opcje_ruchu(self.biale_bierki, self.pola_bialych, 'bialy')
                                 if len(self.biale_bierki) == len(self.czarne_bierki):
@@ -396,16 +419,20 @@ class Game:
                                 self.etap = 0
                                 self.tmp = 100
                                 self.wsje_ruchy = []
-                                if (len(self.biale_bierki) == ile_bialych_bierek and len(
-                                        self.czarne_bierki) == ile_czarnych_bierek):
+                                if (len(self.biale_bierki) == ile_bialych_bierek and len(self.czarne_bierki) == ile_czarnych_bierek):
                                     self.counter_draw_moves += 1
                                 else:
                                     self.counter_draw_moves = 0
+                                save_lists_to_file(self.pola_bialych, self.pola_czarnych, save_path)
+                                print("zapisuje")
+                                print(self.pola_bialych)
+                                print(self.pola_czarnych)
 
                     if len(self.biale_bierki) == 0:
                         self.winner = 'czarny'
                     if self.counter_draw_moves == 6:
                         self.winner = 'remis'
+                        clear_file(save_path)
                         print("Remis")
                         main()
                 pygame.display.flip()
