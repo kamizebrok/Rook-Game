@@ -25,13 +25,13 @@ def draw_text(text, font, color, surface, x, y):
     text_rect.center = (x, y)
     surface.blit(text_obj, text_rect)
 
-def save_lists_to_file(list1, list2, filename):
+def save_lists_to_file(list1, list2, str, filename):
     with open(filename, 'wb') as file:
-        pickle.dump((list1, list2), file)
+        pickle.dump((list1, list2, str), file)
 def load_lists_from_file(filename):
     with open(filename, 'rb') as file:
-        list1, list2 = pickle.load(file)
-    return list1, list2
+        list1, list2, str = pickle.load(file)
+    return list1, list2, str
 def clear_file(filename):
     with open(filename, 'w') as file:
         pass
@@ -118,10 +118,11 @@ class Game:
         self.wsje_ruchy = []
 
         if iscontinued:
-            self.pola_bialych, self.pola_czarnych = load_lists_from_file(save_path)
-            print("wczytuje")
-            print(self.pola_bialych)
-            print(self.pola_czarnych)
+            self.pola_bialych, self.pola_czarnych, self.etap = load_lists_from_file(save_path)
+            # print("wczytuje")
+            # print(self.pola_bialych)
+            # print(self.pola_czarnych)
+            # print("Z pliku: " + str(self.etap))
         else:
             self.pola_bialych = [(0, 7), (1, 7), (2, 7), (3, 7), (4, 7), (5, 7), (6, 7), (7, 7), (0, 6), (1, 6), (2, 6),
                                  (3, 6), (4, 6), (5, 6), (6, 6), (7, 6)]
@@ -344,6 +345,10 @@ class Game:
                                 self.etap = 2
                                 self.tmp = 100
                                 self.wsje_ruchy = []
+                                save_lists_to_file(self.pola_bialych, self.pola_czarnych, self.etap, save_path)
+                                # print("zapisuje")
+                                # print(self.etap)
+                                # print("czarny")
                         if self.etap > 1:
                             if len(self.czarne_bierki) == 0:
                                 self.winner = 'bialy'
@@ -369,10 +374,12 @@ class Game:
                                     self.counter_draw_moves += 1
                                 else:
                                     self.counter_draw_moves = 0
-                                save_lists_to_file(self.pola_bialych, self.pola_czarnych, save_path)
-                                print("zapisuje")
-                                print(self.pola_bialych)
-                                print(self.pola_czarnych)
+                                save_lists_to_file(self.pola_bialych, self.pola_czarnych, self.etap, save_path)
+                                # print("zapisuje")
+                                # print(self.etap)
+                                # print("bialy")
+                                # print(self.pola_bialych)
+                                # print(self.pola_czarnych)
 
                     if len(self.biale_bierki) == 0:
                         self.winner = 'czarny'
