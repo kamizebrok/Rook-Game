@@ -1,1 +1,1 @@
-font/LEIPFONT.TTF
+font/CHEQ_TT.TTF
