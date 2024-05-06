@@ -1,7 +1,6 @@
 from pathlib import Path
 import pygame
 import sys
-import time
 import pickle
 import os
 
@@ -19,6 +18,9 @@ BLACK = (0, 0, 0)
 GRAY = (128, 128, 128)
 
 save_path = 'save.txt'
+
+#jasny, ciemny, jasny2/tlo
+#motywy =[['wheat','wheat1','wheat3'],['steelblue1','steelblue4','steelblue3']]
 
 def draw_text(text, font, color, surface, x, y):
     text_obj = font.render(text, True, color)
@@ -108,8 +110,12 @@ class Game:
         self.zegar = pygame.time.Clock()
         self.fps = 60
         self.tlo = 'wheat3'
+        #self.i_motyw = 1
+        #self.tlo = motywy[i_motyw][2]
         self.kolor_jasny = 'wheat'
+        #self.kolor_jasny = motywy[i_motyw][0]
         self.kolor_ciemny = 'wheat1'
+        #self.kolor_ciemny = motywy[i_motyw][1]
         self.WINDOW_TITLE = "Gra-Wiezami"
         pygame.display.set_caption(self.WINDOW_TITLE)
         self.icon = pygame.image.load('grafiki/icon.png')
@@ -305,6 +311,27 @@ class Game:
                     pygame.time.wait(100)
                     i = i + 1
                 main()
+            elif self.winner == 'remis':
+                clear_file(save_path)
+                img = pygame.image.load("grafiki/remis.png").convert()
+                screen_rect = self.screen.get_rect()
+                img_rect = img.get_rect()
+                img_x = screen_rect.centerx - img_rect.width // 2
+                img_y = screen_rect.centery - img_rect.height // 2
+                self.screen.fill((255, 244, 229))
+                self.screen.blit(img, (img_x, img_y))
+                pygame.display.update()
+                i = 0
+                while i < 50:
+                    for event in pygame.event.get():
+                        if event.type == pygame.QUIT:
+                            run = False
+                        if event.type == pygame.KEYDOWN:
+                            if event.key == pygame.K_ESCAPE:
+                                main()
+                    pygame.time.wait(100)
+                    i = i + 1
+                main()
             else:
                 self.zegar.tick(self.fps)
                 self.screen.fill(self.tlo)
@@ -391,7 +418,6 @@ class Game:
                         self.winner = 'remis'
                         clear_file(save_path)
                         print("Remis")
-                        main()
                 pygame.display.flip()
 
         pygame.quit()
