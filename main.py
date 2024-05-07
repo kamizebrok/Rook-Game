@@ -1,8 +1,11 @@
 from pathlib import Path
 import pygame
 import sys
+import time
 import pickle
+import pygame.freetype
 import os
+
 
 pygame.init()
 
@@ -18,9 +21,6 @@ BLACK = (0, 0, 0)
 GRAY = (128, 128, 128)
 
 save_path = 'save.txt'
-
-#jasny, ciemny, jasny2/tlo
-#motywy =[['wheat','wheat1','wheat3'],['steelblue1','steelblue4','steelblue3']]
 
 def draw_text(text, font, color, surface, x, y):
     text_obj = font.render(text, True, color)
@@ -87,7 +87,7 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
-        background_image = pygame.image.load("grafiki/tlo1.png").convert()
+        background_image = pygame.image.load("grafiki/tlo.png").convert()
         WIN.fill((255, 255, 255))
         WIN.blit(background_image, (0, 0))
         if path.is_file() and bool(path.stat().st_size):
@@ -272,6 +272,8 @@ class Game:
             if self.winner == 'bialy':
                 clear_file(save_path)
                 img = pygame.image.load("grafiki/bialy_win.png").convert()
+                font = pygame.freetype.Font("font/LaPicaDemo-LaPicaDemo.otf", 86)
+                font.render_to(img, (10, 10), "Wygrana bialego", (255, 255, 255))
                 screen_rect = self.screen.get_rect()
                 img_rect = img.get_rect()
                 img_x = screen_rect.centerx - img_rect.width // 2
@@ -292,7 +294,9 @@ class Game:
                 main()
             elif self.winner == 'czarny':
                 clear_file(save_path)
-                img = pygame.image.load("grafiki/czarny_win.png").convert()
+                img = pygame.image.load("grafiki/czarne_win.png").convert()
+                font = pygame.freetype.Font("font/LaPicaDemo-LaPicaDemo.otf", 78)
+                font.render_to(img, (10, 10), "Wygrana czarnego", (75, 75, 75))
                 screen_rect = self.screen.get_rect()
                 img_rect = img.get_rect()
                 img_x = screen_rect.centerx - img_rect.width // 2
@@ -313,7 +317,9 @@ class Game:
                 main()
             elif self.winner == 'remis':
                 clear_file(save_path)
-                img = pygame.image.load("grafiki/remis.png").convert()
+                img = pygame.image.load("grafiki/remis.jpg").convert()
+                font = pygame.freetype.Font("font/Komigo3D-Regular.ttf", 300)
+                font.render_to(img, (50, 250), "Remis", (147, 112, 219))
                 screen_rect = self.screen.get_rect()
                 img_rect = img.get_rect()
                 img_x = screen_rect.centerx - img_rect.width // 2
@@ -417,7 +423,7 @@ class Game:
                     if self.counter_draw_moves == 6:
                         self.winner = 'remis'
                         clear_file(save_path)
-                        print("Remis")
+                        #print("Remis")
                 pygame.display.flip()
 
         pygame.quit()
@@ -465,7 +471,7 @@ class Button():
                     if event.key == pygame.K_ESCAPE:
                         pygame.display.set_caption("Gra-Wiezami")
                         main()
-            background_image = pygame.image.load("grafiki/tlo1.png").convert()
+            background_image = pygame.image.load("grafiki/tlo.png").convert()
             screen.fill((255, 255, 255))
             screen.blit(background_image, (0, 0))
             screen.blit(figure.rysuj_bierke()[0], figure.rysuj_bierke()[1])
