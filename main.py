@@ -35,6 +35,13 @@ def load_lists_from_file(filename):
     with open(filename, 'rb') as file:
         list1, list2, str = pickle.load(file)
     return list1, list2, str
+def save_font_to_file(str, filename):
+    with open(filename, 'wb') as file:
+        pickle.dump(str, file)
+def load_font_from_file(filename):
+    with open(filename, 'rb') as file:
+        str = pickle.load(file)
+    return str
 def clear_file(filename):
     with open(filename, 'w') as file:
         pass
@@ -452,13 +459,16 @@ class Button():
     def window_settings(self):
         screen = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption("Gra-Wiezami-Ustawienia")
-        figure = Figure(self.name_chess_pieces)
-        figure.rysuj_bierke()
         button_width = 250
         button_length = 100
         position_x = (WIDTH - button_width) / 2
         position_y = 175
-        chess_pieces_button = Button(self.name_chess_pieces, button_width, button_length, (position_x, position_y), 20,
+        font = self.name_chess_pieces
+        if os.path.isfile('font.txt'):
+            font = load_font_from_file('font.txt')
+        figure = Figure(font)
+        figure.rysuj_bierke()
+        chess_pieces_button = Button(font, button_width, button_length, (position_x, position_y), 20,
                              (128, 128, 255, 128), (255, 128, 255, 128))
         back_button = Button("Powrot", button_width, button_length, (position_x, position_y + 125), 20,
                              (128, 128, 255, 128), (255, 128, 255, 128))
@@ -522,6 +532,7 @@ class Button():
         elif self.name in ["Nowoczesne", "Przypadki", "Maya", "Alfa", "Condal", "Leipzig"]:
             names = ["Przypadki", "Maya", "Alfa", "Condal", "Leipzig", "Nowoczesne"]
             index = (names.index(self.name) + 1) % len(names)
+            save_font_to_file(names[index], 'font.txt')
             self.name_chess_pieces = names[index]
             self.window_settings()
         elif self.name == "Plansza":
